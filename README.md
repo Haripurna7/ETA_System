@@ -2,16 +2,6 @@
 
 > **A production-grade, end-to-end Machine Learning platform for real-time delivery ETA prediction, powered by XGBoost, SHAP explainability, and Google Gemini AI.**
 
----
-
-![Platform](https://img.shields.io/badge/Platform-FastAPI%20%2B%20XGBoost-blueviolet?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python)
-![ML](https://img.shields.io/badge/ML-XGBoost%20%7C%20SHAP-orange?style=for-the-badge)
-![AI](https://img.shields.io/badge/AI-Google%20Gemini-green?style=for-the-badge&logo=google)
-![Frontend](https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JS-yellow?style=for-the-badge)
-
----
-
 ## 📖 Table of Contents
 
 1. [Project Overview](#project-overview)
@@ -498,5 +488,6 @@ Built end-to-end as a demonstration of production-grade ML platform engineering:
 ---
 
 * Making every delivery predictable.*
-#   A c c d e n t _ d e c t e c t i o n _ y o l o  
+#   A c c d e n t _ d e c t e c t i o n _ y o l o 
+ 
  
