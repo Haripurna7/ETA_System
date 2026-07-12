@@ -488,6 +488,3 @@ Built end-to-end as a demonstration of production-grade ML platform engineering:
 ---
 
 * Making every delivery predictable.*
-#   A c c d e n t _ d e c t e c t i o n _ y o l o 
- 
- 
