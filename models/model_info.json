@@ -1,0 +1,17 @@
+{
+    "model": "XGBoost",
+    "best_parameters": {
+        "learning_rate": 0.05,
+        "max_depth": 8,
+        "n_estimators": 200,
+        "subsample": 0.8
+    },
+    "cross_validation_mae": 4.208343460956626,
+    "cross_validation_scores": [
+        -3.7985747238474032,
+        -4.366783743975044,
+        -4.604503163878754,
+        -4.209441302194776,
+        -4.062414370887154
+    ]
+}

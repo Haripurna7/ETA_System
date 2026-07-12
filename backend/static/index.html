@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick ETA Prediction Platform</title>
+    <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Leaflet Map JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Chart.js for beautiful analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="app-container">
+        
+        <!-- =====================================================
+             HEADER SECTION
+             ===================================================== -->
+        <header class="app-header">
+            <div class="header-logo">
+                <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+                <div class="logo-text">
+                    <h1>ETA</h1>
+                    <span>PREDICTION PLATFORM</span>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <nav class="app-nav">
+                <button class="nav-tab active" data-target="panel-simulator">
+                    <i class="fa-solid fa-compass-drafting"></i> Simulator
+                </button>
+                <button class="nav-tab" data-target="panel-analytics">
+                    <i class="fa-solid fa-chart-line"></i> Analytics
+                </button>
+                <button class="nav-tab" data-target="panel-leaderboard">
+                    <i class="fa-solid fa-trophy"></i> Leaderboards
+                </button>
+                <button class="nav-tab" data-target="panel-batch">
+                    <i class="fa-solid fa-layer-group"></i> Batch Test
+                </button>
+            </nav>
+
+            <div class="header-actions">
+                <div id="api-status" class="status-indicator loading">
+                    <span class="status-dot"></span>
+                    <span class="status-label">Checking Server...</span>
+                </div>
+                <button id="btn-settings" class="icon-btn" title="Configure Gemini API Key">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- =====================================================
+             MAIN LAYOUT PANELS
+             ===================================================== -->
+        <main class="app-main">
+            
+            <!-- 1. SIMULATOR PANEL -->
+            <div id="panel-simulator" class="tab-panel active">
+                <div class="simulator-layout">
+                    <!-- LEFT COLUMN: SIMULATOR FORM -->
+                    <section class="simulator-section card-glass">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-sliders-h text-gradient"></i> Delivery Simulator</h2>
+                            <p>Configure order details, choose partners, and predict the expected time of delivery.</p>
+                        </div>
+                        <form id="simulator-form" class="simulator-form">
+                            
+                            <!-- Restaurant & Rider Dropdowns -->
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="select-restaurant"><i class="fa-solid fa-store"></i> Restaurant</label>
+                                    <div class="select-wrapper">
+                                        <select id="select-restaurant" required>
+                                            <option value="" disabled selected>Select a restaurant...</option>
+                                        </select>
+                                    </div>
+                                    <div id="restaurant-info" class="meta-info hidden">
+                                        <span>Rating: <strong id="rest-rating">0.0</strong> <i class="fa-solid fa-star text-gold"></i></span>
+                                        <span>Prep Cap: <strong id="rest-cap">0</strong>/hr</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="select-rider"><i class="fa-solid fa-motorcycle"></i> Courier / Rider</label>
+                                    <div class="select-wrapper">
+                                        <select id="select-rider" required>
+                                            <option value="" disabled selected>Select a rider...</option>
+                                        </select>
+                                    </div>
+                                    <div id="rider-info" class="meta-info hidden">
+                                        <span>Load: <strong id="rider-load">0</strong> orders</span>
+                                        <span>Done: <strong id="rider-completed">0</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vehicle Selector -->
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-truck-fast"></i> Override Vehicle Type</label>
+                                <div class="vehicle-cards-container">
+                                    <label class="vehicle-card select-card active">
+                                        <input type="radio" name="vehicle_type" value="" checked>
+                                        <div class="card-content">
+                                            <i class="fa-solid fa-user-check"></i>
+                                            <span>Rider Default</span>
+                                        </div>
+                                    </label>
+                                    <label class="vehicle-card select-card">
+                                        <input type="radio" name="vehicle_type" value="scooter">
+                                        <div class="card-content">
+                                            <i class="fa-solid fa-motorcycle"></i>
+                                            <span>Scooter</span>
+                                        </div>
+                                    </label>
+                                    <label class="vehicle-card select-card">
+                                        <input type="radio" name="vehicle_type" value="bike">
+                                        <div class="card-content">
+                                            <i class="fa-solid fa-bicycle"></i>
+                                            <span>E-Bike</span>
+                                        </div>
+                                    </label>
+                                    <label class="vehicle-card select-card">
+                                        <input type="radio" name="vehicle_type" value="car">
+                                        <div class="card-content">
+                                            <i class="fa-solid fa-car"></i>
+                                            <span>Car</span>
+                                        </div>
+                                    </label>
+                                    <label class="vehicle-card select-card">
+                                        <input type="radio" name="vehicle_type" value="bicycle">
+                                        <div class="card-content">
+                                            <i class="fa-solid fa-person-biking"></i>
+                                            <span>Bicycle</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Sliders for Order Parameters -->
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <div class="label-with-val">
+                                        <label for="slider-order-size"><i class="fa-solid fa-box-open"></i> Order Size</label>
+                                        <span id="val-order-size" class="slider-badge">3 items</span>
+                                    </div>
+                                    <input type="range" id="slider-order-size" min="1" max="15" value="3" class="custom-range">
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="label-with-val">
+                                        <label for="slider-order-value"><i class="fa-solid fa-indian-rupee-sign"></i> Order Value</label>
+                                        <span id="val-order-value" class="slider-badge">₹500</span>
+                                    </div>
+                                    <input type="range" id="slider-order-value" min="50" max="2000" step="50" value="500" class="custom-range">
+                                </div>
+                            </div>
+
+                            <!-- Location Coordinates -->
+                            <div class="form-group location-group">
+                                <div class="label-with-val">
+                                    <label><i class="fa-solid fa-location-dot"></i> Customer Drop-off Coordinates</label>
+                                    <button type="button" id="btn-mock-coords" class="text-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Randomize nearby</button>
+                                </div>
+                                <div class="input-coordinates-row">
+                                    <div class="coord-input">
+                                        <span>Lat</span>
+                                        <input type="number" id="drop-lat" step="0.000001" placeholder="12.9715987" required>
+                                    </div>
+                                    <div class="coord-input">
+                                        <span>Lon</span>
+                                        <input type="number" id="drop-lon" step="0.000001" placeholder="77.5945627" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Promo Codes -->
+                            <div class="form-group">
+                                <label for="select-promo"><i class="fa-solid fa-tags"></i> Promo Code</label>
+                                <div class="select-wrapper">
+                                    <select id="select-promo">
+                                        <option value="WELCOME50">WELCOME50 (50% Off First Order)</option>
+                                        <option value="BLR10" selected>BLR10 (Bengaluru Local Delivery)</option>
+                                        <option value="FREESHIP">FREESHIP (Free Shipping Promo)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btn-submit" class="submit-btn glowing">
+                                <span class="btn-text">Predict Delivery ETA</span>
+                                <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin"></i> Running XGBoost...</span>
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- RIGHT COLUMN: RESULTS, MAP & CHAT -->
+                    <section class="results-section">
+                        <!-- Leaflet Interactive Map Container -->
+                        <div class="map-container-wrapper card-glass">
+                            <div class="card-header mini">
+                                <h3><i class="fa-solid fa-map-location-dot text-gradient"></i> Live Route Map</h3>
+                            </div>
+                            <div id="route-map" class="route-map"></div>
+                        </div>
+
+                        <!-- PLACEHOLDER CARD -->
+                        <div id="results-placeholder" class="placeholder-card card-glass active">
+                            <div class="placeholder-icon"><i class="fa-solid fa-compass-drafting fa-pulse"></i></div>
+                            <h3>Simulation Inactive</h3>
+                            <p>Configure delivery parameters, choose options, then hit <strong>Predict Delivery ETA</strong> to run the machine learning predictor and view the map path.</p>
+                        </div>
+
+                        <!-- PREDICTION RESULT PANEL -->
+                        <div id="results-panel" class="results-panel card-glass hidden">
+                            <!-- Predicted ETA Display -->
+                            <div class="eta-display-card">
+                                <div class="eta-label">Expected Time of Delivery</div>
+                                <div class="eta-value">
+                                    <span id="eta-number">--.-</span>
+                                    <span class="eta-unit">mins</span>
+                                </div>
+                                <div class="eta-confidence">
+                                    Confidence Bounds (MAE Model): <span id="eta-bounds">-- to --</span> mins
+                                </div>
+                            </div>
+
+                            <!-- Visual Metrics Grid -->
+                            <div class="metrics-grid">
+                                <div class="metric-mini-card">
+                                    <span class="mini-label">Distance</span>
+                                    <span id="metric-dist" class="mini-value">-- km</span>
+                                </div>
+                                <div class="metric-mini-card">
+                                    <span class="mini-label">Est. Travel Time</span>
+                                    <span id="metric-travel" class="mini-value">-- mins</span>
+                                </div>
+                                <div class="metric-mini-card">
+                                    <span class="mini-label">Restaurant Prep</span>
+                                    <span id="metric-efficiency" class="mini-value">--</span>
+                                </div>
+                                <div class="metric-mini-card">
+                                    <span class="mini-label">Rider Call Sign</span>
+                                    <span id="metric-rider" class="mini-value">--</span>
+                                </div>
+                            </div>
+
+                            <!-- Prediction Explanation/Summary -->
+                            <div class="summary-card">
+                                <h4><i class="fa-solid fa-circle-info"></i> Prediction Summary</h4>
+                                <p id="eta-summary">--</p>
+                            </div>
+
+                            <!-- CSS Factor Importance Graph -->
+                            <div class="factors-card">
+                                <h4><i class="fa-solid fa-chart-bar"></i> Key Factors Influencing Prediction</h4>
+                                <div class="bar-chart-container">
+                                    <div class="bar-chart-row">
+                                        <span class="bar-label">Customer Distance</span>
+                                        <div class="bar-container"><div id="bar-dist" class="bar-fill" style="width: 0%"></div></div>
+                                        <span id="val-bar-dist" class="bar-val">--</span>
+                                    </div>
+                                    <div class="bar-chart-row">
+                                        <span class="bar-label">Restaurant Prep</span>
+                                        <div class="bar-container"><div id="bar-prep" class="bar-fill" style="width: 0%"></div></div>
+                                        <span id="val-bar-prep" class="bar-val">--</span>
+                                    </div>
+                                    <div class="bar-chart-row">
+                                        <span class="bar-label">Traffic Intensity</span>
+                                        <div class="bar-container"><div id="bar-traffic" class="bar-fill" style="width: 0%"></div></div>
+                                        <span id="val-bar-traffic" class="bar-val">--</span>
+                                    </div>
+                                    <div class="bar-chart-row">
+                                        <span class="bar-label">Rider Workload</span>
+                                        <div class="bar-container"><div id="bar-load" class="bar-fill" style="width: 0%"></div></div>
+                                        <span id="val-bar-load" class="bar-val">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ASSISTANT CHAT DRAWER -->
+                        <div class="assistant-drawer card-glass">
+                            <div class="drawer-header">
+                                <h3><i class="fa-solid fa-robot text-gradient"></i> AI Prediction Assistant</h3>
+                                <span class="assistant-badge">Gemini powered</span>
+                            </div>
+                            <div id="chat-messages" class="chat-messages">
+                                <div class="message assistant">
+                                    <div class="msg-bubble">
+                                        Hello! I'm your quick commerce prediction assistant. I can help explain why this ETA was predicted, summarize our XGBoost model, or explain our Exploratory Data Analysis (EDA). How can I assist you today?
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Prompt Suggestions -->
+                            <div class="chat-suggestions">
+                                <button class="suggest-btn" data-q="Why was this ETA predicted?">Why this ETA?</button>
+                                <button class="suggest-btn" data-q="Which factors affected the prediction?">Factors List</button>
+                                <button class="suggest-btn" data-q="Explain the EDA observations.">EDA Observations</button>
+                                <button class="suggest-btn" data-q="Summarize the dataset.">Dataset Info</button>
+                            </div>
+
+                            <div class="chat-input-row">
+                                <input type="text" id="chat-input" placeholder="Ask assistant about this delivery...">
+                                <button id="chat-send" class="icon-btn glowing" title="Send Message">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- 2. ANALYTICS PANEL -->
+            <div id="panel-analytics" class="tab-panel">
+                <div class="analytics-layout">
+                    <!-- KPI Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card card-glass">
+                            <div class="kpi-icon teal"><i class="fa-solid fa-store"></i></div>
+                            <div class="kpi-content">
+                                <span class="kpi-title">Total Restaurants</span>
+                                <h3 id="kpi-restaurants">--</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-glass">
+                            <div class="kpi-icon indigo"><i class="fa-solid fa-users"></i></div>
+                            <div class="kpi-content">
+                                <span class="kpi-title">Active Riders</span>
+                                <h3 id="kpi-riders">--</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-glass">
+                            <div class="kpi-icon gold"><i class="fa-solid fa-star"></i></div>
+                            <div class="kpi-content">
+                                <span class="kpi-title">Avg Restaurant Rating</span>
+                                <h3 id="kpi-avg-rating">--</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-glass">
+                            <div class="kpi-icon emerald"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="kpi-content">
+                                <span class="kpi-title">Avg Deliveries/Rider</span>
+                                <h3 id="kpi-completed-orders">--</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="charts-grid">
+                        <div class="chart-container card-glass">
+                            <h4><i class="fa-solid fa-chart-simple text-gradient"></i> Travel Speed by Vehicle (km/h)</h4>
+                            <div class="canvas-wrapper">
+                                <canvas id="chart-vehicle-speed"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container card-glass">
+                            <h4><i class="fa-solid fa-chart-line text-gradient"></i> Prediction History Trend (mins)</h4>
+                            <div class="canvas-wrapper">
+                                <canvas id="chart-session-trend"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container card-glass">
+                            <h4><i class="fa-solid fa-chart-pie text-gradient"></i> Fleet Vehicle Share</h4>
+                            <div class="canvas-wrapper">
+                                <canvas id="chart-fleet-share"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Session History Table -->
+                    <section class="history-section card-glass">
+                        <div class="section-header">
+                            <h3><i class="fa-solid fa-clock-rotate-left text-gradient"></i> Session Prediction History</h3>
+                            <button id="btn-export-csv" class="text-btn"><i class="fa-solid fa-file-export"></i> Export CSV</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Restaurant</th>
+                                        <th>Rider</th>
+                                        <th>Distance (km)</th>
+                                        <th>Vehicle Override</th>
+                                        <th>Predicted ETA</th>
+                                        <th>Confidence Bounds</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-tbody">
+                                    <tr class="empty-row">
+                                        <td colspan="8">No predictions run in this session yet. Run a prediction in the Simulator tab.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- 3. LEADERBOARD PANEL -->
+            <div id="panel-leaderboard" class="tab-panel">
+                <div class="leaderboard-layout">
+                    <div class="leaderboard-grid">
+                        
+                        <!-- Restaurants Leaderboard -->
+                        <div class="leaderboard-card card-glass">
+                            <h3><i class="fa-solid fa-star text-gold"></i> Top Efficient Restaurants</h3>
+                            <p class="subtitle">Ranked by prep capacity and average rating efficiency score.</p>
+                            <div class="table-wrapper">
+                                <table class="leaderboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Restaurant Name</th>
+                                            <th>Cuisine</th>
+                                            <th>Rating</th>
+                                            <th>Capacity / hr</th>
+                                            <th>Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leaderboard-restaurants-tbody">
+                                        <tr><td colspan="6" class="loading-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Riders Leaderboard -->
+                        <div class="leaderboard-card card-glass">
+                            <h3><i class="fa-solid fa-trophy text-gradient"></i> Top Experienced Courier Partners</h3>
+                            <p class="subtitle">Ranked by lifetime completed orders and shift workload.</p>
+                            <div class="table-wrapper">
+                                <table class="leaderboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Call Sign</th>
+                                            <th>Vehicle</th>
+                                            <th>Completed Orders</th>
+                                            <th>Shift Hours</th>
+                                            <th>Current Load</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leaderboard-riders-tbody">
+                                        <tr><td colspan="6" class="loading-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. BATCH SIMULATOR PANEL -->
+            <div id="panel-batch" class="tab-panel">
+                <div class="batch-layout">
+                    <div class="batch-control-card card-glass">
+                        <div class="control-header">
+                            <h2><i class="fa-solid fa-layer-group text-gradient"></i> Batch Simulation Runner</h2>
+                            <p>Generate 5 random delivery predictions simultaneously to test the machine learning model under multiple scenarios.</p>
+                        </div>
+                        <button id="btn-run-batch" class="submit-btn glowing">
+                            <span class="btn-text"><i class="fa-solid fa-play"></i> Run Parallel Batch Prediction</span>
+                            <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin"></i> Predicting 5 orders...</span>
+                        </button>
+                    </div>
+
+                    <div class="batch-results card-glass">
+                        <h3><i class="fa-solid fa-list-check text-gradient"></i> Batch Results Comparison</h3>
+                        <div class="table-wrapper">
+                            <table class="batch-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sim ID</th>
+                                        <th>Restaurant Name</th>
+                                        <th>Rider Call Sign</th>
+                                        <th>Vehicle Override</th>
+                                        <th>Distance (km)</th>
+                                        <th>Est. Travel Time</th>
+                                        <th>Predicted ETA</th>
+                                        <th>Confidence Interval</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batch-tbody">
+                                    <tr class="empty-row">
+                                        <td colspan="9">No batch runs triggered. Click the button above to run parallel simulations.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+
+        <!-- =====================================================
+             MODAL POPUPS
+             ===================================================== -->
+        <!-- Configuration Modal -->
+        <div id="settings-modal" class="modal-overlay hidden">
+            <div class="modal-card card-glass">
+                <div class="modal-header">
+                    <h3>Settings</h3>
+                    <button id="settings-close" class="close-btn"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="gemini-key-input">Google Gemini API Key</label>
+                        <input type="password" id="gemini-key-input" placeholder="AIzaSy...">
+                        <p class="help-text">Enter your Google Gemini API Key. The key is stored locally in your browser storage for security and is used to talk to the AI Assistant directly from the UI.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-save-settings" class="submit-btn">Save Key</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Custom Javascript Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
